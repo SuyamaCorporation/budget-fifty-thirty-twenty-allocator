@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>50-30-20 予算 配分 計算</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-gray-100 min-h-screen">
+  <div class="max-w-3xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-center mb-2 text-emerald-400">50-30-20 予算 配分 計算</h1>
+    <p class="text-center text-gray-400 mb-8 text-sm">必需品50% / 欲求30% / 貯蓄・投資20% で家計を整理</p>
+
+    <!-- 収入入力 -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h2 class="text-lg font-semibold mb-4 text-emerald-300">月手取り収入</h2>
+      <div class="flex gap-3">
+        <div class="flex-1">
+          <label for="income" class="block text-sm text-gray-400 mb-1">手取り収入 (円)</label>
+          <input type="number" id="income" min="0" step="1000" placeholder="例: 250000"
+            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-400"
+            aria-label="月手取り収入を円で入力">
+        </div>
+        <div class="flex items-end">
+          <button id="calcBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400" role="button">
+            計算
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 配分結果 -->
+    <div id="allocationSection" class="hidden mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-blue-900 border border-blue-600 rounded-xl p-4 text-center">
+          <div class="text-3xl mb-1">🏠</div>
+          <div class="text-blue-300 font-semibold text-sm mb-1">必需品</div>
+          <div class="text-2xl font-bold text-white" id="needsAmt">—</div>
+          <div class="text-blue-400 text-xs mt-1">50%</div>
+        </div>
+        <div class="bg-purple-900 border border-purple-600 rounded-xl p-4 text-center">
+          <div class="text-3xl mb-1">🎉</div>
+          <div class="text-purple-300 font-semibold text-sm mb-1">欲求・娯楽</div>
+          <div class="text-2xl font-bold text-white" id="wantsAmt">—</div>
+          <div class="text-purple-400 text-xs mt-1">30%</div>
+        </div>
+        <div class="bg-emerald-900 border border-emerald-600 rounded-xl p-4 text-center">
+          <div class="text-3xl mb-1">💰</div>
+          <div class="text-emerald-300 font-semibold text-sm mb-1">貯蓄・投資</div>
+          <div class="text-2xl font-bold text-white" id="savingsAmt">—</div>
+          <div class="text-emerald-400 text-xs mt-1">20%</div>
+        </div>
+      </div>
+
+      <!-- 実績入力 -->
+      <div class="bg-slate-800 rounded-xl p-6 mb-4">
+        <h2 class="text-lg font-semibold mb-4 text-emerald-300">今月の実際の支出を入力</h2>
+        <div class="space-y-4">
+          <div>
+            <label for="actualNeeds" class="block text-sm font-semibold text-blue-300 mb-1">必需品 (家賃・食費・光熱費・交通費など)</label>
+            <input type="number" id="actualNeeds" min="0" step="100" placeholder="0"
+              class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-400"
+              aria-label="必需品の実際の支出を入力">
+          </div>
+          <div>
+            <label for="actualWants" class="block text-sm font-semibold text-purple-300 mb-1">欲求・娯楽 (外食・娯楽・ファッションなど)</label>
+            <input type="number" id="actualWants" min="0" step="100" placeholder="0"
+              class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-400"
+              aria-label="欲求・娯楽の実際の支出を入力">
+          </div>
+          <div>
+            <label for="actualSavings" class="block text-sm font-semibold text-emerald-300 mb-1">貯蓄・投資 (貯金・NISA・保険など)</label>
+            <input type="number" id="actualSavings" min="0" step="100" placeholder="0"
+              class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-400"
+              aria-label="貯蓄・投資の実際の支出を入力">
+          </div>
+        </div>
+        <button id="compareBtn" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400" role="button">
+          乖離を確認する
+        </button>
+      </div>
+
+      <!-- 乖離グラフ -->
+      <div id="gapSection" class="hidden bg-slate-800 rounded-xl p-6 mb-4">
+        <h2 class="text-lg font-semibold mb-4 text-emerald-300">目標 vs 実績 比較</h2>
+        <div id="barCharts" class="space-y-5"></div>
+        <button id="saveMonthBtn" class="w-full mt-4 bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-400" role="button">
+          月次サマリを保存
+        </button>
+      </div>
+    </div>
+
+    <!-- 月次推移 -->
+    <div class="bg-slate-800 rounded-xl p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-semibold text-emerald-300">月次サマリ履歴</h2>
+        <button id="clearHistoryBtn" class="text-xs text-red-400 hover:text-red-300 focus:outline-none" aria-label="履歴を全削除">全削除</button>
+      </div>
+      <div id="historyList" class="space-y-2"></div>
+      <p id="noHistory" class="text-gray-500 text-sm text-center py-4">保存済みデータがありません</p>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'budget_5030_history';
+    let targetNeeds = 0, targetWants = 0, targetSavings = 0;
+
+    function fmt(n) { return n.toLocaleString('ja-JP') + '円'; }
+
+    function loadHistory() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+    }
+    function saveHistory(h) { localStorage.setItem(STORAGE_KEY, JSON.stringify(h)); }
+
+    function renderBar(container, label, color, target, actual) {
+      const gap = actual - target;
+      const pct = target > 0 ? Math.min((actual / target) * 100, 150) : 0;
+      const over = gap > 0;
+
+      const wrap = document.createElement('div');
+      const labelRow = document.createElement('div');
+      labelRow.className = 'flex justify-between text-sm mb-1';
+      const lSpan = document.createElement('span');
+      lSpan.className = 'font-semibold ' + color;
+      lSpan.textContent = label;
+      const rSpan = document.createElement('span');
+      rSpan.className = over ? 'text-red-400' : 'text-emerald-400';
+      rSpan.textContent = (over ? '+' : '') + fmt(gap);
+      labelRow.appendChild(lSpan);
+      labelRow.appendChild(rSpan);
+
+      const barBg = document.createElement('div');
+      barBg.className = 'relative h-6 bg-slate-700 rounded-full overflow-hidden';
+      const barFill = document.createElement('div');
+      barFill.className = 'absolute left-0 top-0 h-full rounded-full transition-all duration-500 ' + (over ? 'bg-red-500' : 'bg-emerald-500');
+      barFill.style.width = pct + '%';
+      const barTarget = document.createElement('div');
+      barTarget.className = 'absolute top-0 h-full w-0.5 bg-white opacity-60';
+      barTarget.style.left = '66.7%';
+      barBg.appendChild(barFill);
+      barBg.appendChild(barTarget);
+
+      const subRow = document.createElement('div');
+      subRow.className = 'flex justify-between text-xs text-gray-400 mt-1';
+      const subL = document.createElement('span');
+      subL.textContent = '目標: ' + fmt(target);
+      const subR = document.createElement('span');
+      subR.textContent = '実績: ' + fmt(actual);
+      subRow.appendChild(subL);
+      subRow.appendChild(subR);
+
+      wrap.appendChild(labelRow);
+      wrap.appendChild(barBg);
+      wrap.appendChild(subRow);
+      container.appendChild(wrap);
+    }
+
+    function renderHistory() {
+      const history = loadHistory();
+      const list = document.getElementById('historyList');
+      const noH = document.getElementById('noHistory');
+      list.textContent = '';
+      if (history.length === 0) { noH.classList.remove('hidden'); return; }
+      noH.classList.add('hidden');
+      history.slice().reverse().forEach(rec => {
+        const div = document.createElement('div');
+        div.className = 'bg-slate-700 rounded-lg px-4 py-3 text-sm';
+        const top = document.createElement('div');
+        top.className = 'flex justify-between items-center mb-1';
+        const dateSpan = document.createElement('span');
+        dateSpan.className = 'font-semibold text-emerald-300';
+        dateSpan.textContent = rec.month;
+        const incSpan = document.createElement('span');
+        incSpan.className = 'text-gray-300';
+        incSpan.textContent = '収入 ' + fmt(rec.income);
+        top.appendChild(dateSpan);
+        top.appendChild(incSpan);
+        const bottom = document.createElement('div');
+        bottom.className = 'grid grid-cols-3 gap-2 text-xs';
+        [
+          { label: '必需品', actual: rec.actualNeeds, target: rec.targetNeeds, color: 'text-blue-300' },
+          { label: '欲求', actual: rec.actualWants, target: rec.targetWants, color: 'text-purple-300' },
+          { label: '貯蓄', actual: rec.actualSavings, target: rec.targetSavings, color: 'text-emerald-300' },
+        ].forEach(c => {
+          const cell = document.createElement('div');
+          const lbl = document.createElement('div');
+          lbl.className = c.color;
+          lbl.textContent = c.label;
+          const val = document.createElement('div');
+          const gap = c.actual - c.target;
+          val.className = gap > 0 ? 'text-red-400' : 'text-emerald-400';
+          val.textContent = (gap > 0 ? '+' : '') + fmt(gap);
+          cell.appendChild(lbl);
+          cell.appendChild(val);
+          bottom.appendChild(cell);
+        });
+        div.appendChild(top);
+        div.appendChild(bottom);
+        list.appendChild(div);
+      });
+    }
+
+    document.getElementById('calcBtn').addEventListener('click', () => {
+      const income = parseFloat(document.getElementById('income').value);
+      if (isNaN(income) || income <= 0) { alert('収入を正しく入力してください'); return; }
+      targetNeeds = income * 0.5;
+      targetWants = income * 0.3;
+      targetSavings = income * 0.2;
+      document.getElementById('needsAmt').textContent = fmt(targetNeeds);
+      document.getElementById('wantsAmt').textContent = fmt(targetWants);
+      document.getElementById('savingsAmt').textContent = fmt(targetSavings);
+      document.getElementById('allocationSection').classList.remove('hidden');
+      document.getElementById('gapSection').classList.add('hidden');
+    });
+
+    document.getElementById('compareBtn').addEventListener('click', () => {
+      const aN = parseFloat(document.getElementById('actualNeeds').value) || 0;
+      const aW = parseFloat(document.getElementById('actualWants').value) || 0;
+      const aS = parseFloat(document.getElementById('actualSavings').value) || 0;
+      const container = document.getElementById('barCharts');
+      container.textContent = '';
+      renderBar(container, '必需品 (50%)', 'text-blue-300', targetNeeds, aN);
+      renderBar(container, '欲求・娯楽 (30%)', 'text-purple-300', targetWants, aW);
+      renderBar(container, '貯蓄・投資 (20%)', 'text-emerald-300', targetSavings, aS);
+      document.getElementById('gapSection').classList.remove('hidden');
+    });
+
+    document.getElementById('saveMonthBtn').addEventListener('click', () => {
+      const income = parseFloat(document.getElementById('income').value) || 0;
+      const rec = {
+        month: new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' }),
+        income,
+        targetNeeds, targetWants, targetSavings,
+        actualNeeds: parseFloat(document.getElementById('actualNeeds').value) || 0,
+        actualWants: parseFloat(document.getElementById('actualWants').value) || 0,
+        actualSavings: parseFloat(document.getElementById('actualSavings').value) || 0,
+      };
+      const history = loadHistory();
+      history.push(rec);
+      saveHistory(history);
+      renderHistory();
+      const btn = document.getElementById('saveMonthBtn');
+      btn.textContent = '保存しました！';
+      setTimeout(() => { btn.textContent = '月次サマリを保存'; }, 1500);
+    });
+
+    document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+      if (confirm('全履歴を削除しますか？')) { localStorage.removeItem(STORAGE_KEY); renderHistory(); }
+    });
+
+    document.getElementById('income').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('calcBtn').click(); });
+
+    renderHistory();
+  </script>
+</body>
+</html>
